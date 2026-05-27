@@ -844,7 +844,10 @@
         button.addEventListener("click", () => startEditCourse(button.dataset.editOverviewCourse));
       });
 
-      const warnings = filteredOverviewCourses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold);
+      const warnings = filteredOverviewCourses.filter((course) => {
+        const remaining = getCourseRemaining(course.id);
+        return remaining > 0 && remaining <= state.settings.warningThreshold;
+      });
       warningList.innerHTML = warnings.length ? warnings.map((course) => {
         const kid = findKid(course.kidId);
         return '<div class="item"><div class="item-title">' + escapeHtml(course.name) + '</div><div class="item-sub">' + escapeHtml(kid ? kid.name : "") + '，剩余 ' + formatHours(getCourseRemaining(course.id)) + ' 课时</div></div>';
