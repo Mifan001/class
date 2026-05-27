@@ -1,1 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>课时管理</title>
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="课时管理">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --warn: #d97706;
+      --warn-soft: #fef3c7;
+      --success: #059669;
+      --success-soft: #d1fae5;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 16px 96px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.18);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    .hero p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+      position: sticky;
+      top: 0;
+      padding: 8px 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 14px;
+      background: #e5e7eb;
+      color: #374151;
+      padding: 10px 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat .value {
+      margin-top: 6px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      padding: 12px 13px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      background: var(--primary);
+      color: #fff;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.warn {
+      background: var(--warn);
+    }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .pill.warn {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .pill.danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .item-title {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .item-sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .progress {
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px 0 8px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #7c3aed);
+      border-radius: 999px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 20px 10px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(100px);
+      background: #111827;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      transition: transform 0.2s ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 520px) {
+      .tabs {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .grid.two,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <h1>小孩兴趣班课时管理</h1>
+      <p>手机浏览器直接使用，数据保存在本机，不需要电脑。</p>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <section class="panel active" data-tab="overview">
+      <div class="card">
+        <h2 class="section-title">总览</h2>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">安装到手机桌面</h2>
+        <div class="muted">发布到 GitHub Pages 后，用手机浏览器打开网址，再选择“添加到主屏幕”即可像 App 一样使用。</div>
+      </div>
+      <div class="card">
+        <div class="item-header">
+          <h2 class="section-title">课时预警</h2>
+          <span class="pill warn" id="warning-pill">阈值 3 课时</span>
+        </div>
+        <div id="warning-list"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">课程情况</h2>
+        <div id="course-overview"></div>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="kids">
+      <div class="card">
+        <h2 class="section-title">添加孩子</h2>
+        <form id="kid-form" class="grid two">
+          <div>
+            <label for="kid-name">孩子姓名</label>
+            <input id="kid-name" required placeholder="例如：小米">
+          </div>
+          <div>
+            <label for="kid-age">年龄</label>
+            <input id="kid-age" type="number" min="1" max="18" value="6" required>
+          </div>
+          <div>
+            <label for="kid-gender">性别</label>
+            <select id="kid-gender">
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+          <div class="button-row" style="align-items:end;">
+            <button type="submit">保存孩子</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2 class="section-title">孩子列表</h2>
+        <div id="kid-list"></div>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="courses">
+      <div class="card">
+        <h2 class="section-title">添加课程</h2>
+        <form id="course-form" class="grid two">
+          <div>
+            <label for="course-kid">孩子</label>
+            <select id="course-kid" required></select>
+          </div>
+          <div>
+            <label for="course-name">课程名称</label>
+            <input id="course-name" required placeholder="例如：钢琴课">
+          </div>
+          <div>
+            <label for="course-type">课程类型</label>
+            <select id="course-type">
+              <option value="艺术类">艺术类</option>
+              <option value="体育类">体育类</option>
+              <option value="学科类">学科类</option>
+              <option value="科技类">科技类</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div>
+            <label for="course-total">购买总课时</label>
+            <input id="course-total" type="number" min="0.5" step="0.5" value="24" required>
+          </div>
+          <div>
+            <label for="course-price">单价（选填）</label>
+            <input id="course-price" type="number" min="0" step="0.01" placeholder="例如：150">
+          </div>
+          <div>
+            <label for="course-note">备注（选填）</label>
+            <input id="course-note" placeholder="例如：周六上午">
+          </div>
+          <div class="button-row" style="align-items:end;">
+            <button type="submit" id="course-submit">保存课程</button>
+            <button type="button" class="secondary hidden" id="course-cancel">取消编辑</button>
+          </div>
+        </form>
+        <p class="muted" id="course-form-tip"></p>
+      </div>
+      <div class="card">
+        <h2 class="section-title">课程列表</h2>
+        <div id="course-list"></div>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="record">
+      <div class="card">
+        <div class="item-header">
+          <h2 class="section-title">记录课时</h2>
+          <div class="button-row">
+            <button type="button" class="secondary" id="mode-consume">消耗</button>
+            <button type="button" class="secondary" id="mode-recharge">充值</button>
+          </div>
+        </div>
+        <form id="record-form" class="grid two">
+          <div>
+            <label for="record-kid">孩子</label>
+            <select id="record-kid" required></select>
+          </div>
+          <div>
+            <label for="record-course">课程</label>
+            <select id="record-course" required></select>
+          </div>
+          <div>
+            <label for="record-hours" id="hours-label">消耗课时</label>
+            <input id="record-hours" type="number" min="0.5" step="0.5" value="1" required>
+          </div>
+          <div>
+            <label for="record-date">日期</label>
+            <input id="record-date" type="date" required>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="record-note">备注</label>
+            <input id="record-note" placeholder="例如：周三常规课 / 续费 12 课时">
+          </div>
+          <div class="button-row" style="align-items:end; grid-column: 1 / -1;">
+            <button type="submit" id="record-submit">确认消耗</button>
+          </div>
+        </form>
+        <p class="muted" id="record-tip"></p>
+      </div>
+      <div class="card">
+        <h2 class="section-title">快捷记录</h2>
+        <div class="button-row">
+          <button type="button" data-quick="1">-1 课时</button>
+          <button type="button" data-quick="1.5">-1.5 课时</button>
+          <button type="button" data-quick="2">-2 课时</button>
+        </div>
+        <p class="muted">先选择孩子和课程，再点快捷按钮。</p>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="history">
+      <div class="card">
+        <div class="item-header">
+          <h2 class="section-title">历史记录</h2>
+          <span class="pill" id="history-count">0 条</span>
+        </div>
+        <div id="history-list"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">数据备份</h2>
+        <div class="button-row" style="margin-bottom: 10px;">
+          <button type="button" id="export-btn">导出数据</button>
+          <button type="button" class="secondary" id="import-btn">导入数据</button>
+        </div>
+        <input id="import-file" class="hidden" type="file" accept="application/json">
+        <div class="grid two">
+          <div>
+            <label for="warning-threshold">预警阈值</label>
+            <input id="warning-threshold" type="number" min="1" max="20" step="1">
+          </div>
+          <div class="button-row" style="align-items:end;">
+            <button type="button" class="warn" id="save-settings">保存设置</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "class-hours-mobile-v1";
+    const tabs = [
+      { key: "overview", label: "总览" },
+      { key: "kids", label: "孩子" },
+      { key: "courses", label: "课程" },
+      { key: "record", label: "记录" },
+      { key: "history", label: "备份" }
+    ];
+
+    let recordMode = "consume";
+    let editingCourseId = null;
+    let state = loadState();
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        return {
+          kids: [],
+          courses: [],
+          records: [],
+          settings: { warningThreshold: 3 }
+        };
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        return {
+          kids: Array.isArray(parsed.kids) ? parsed.kids : [],
+          courses: Array.isArray(parsed.courses) ? parsed.courses : [],
+          records: Array.isArray(parsed.records) ? parsed.records : [],
+          settings: {
+            warningThreshold: Number(parsed.settings && parsed.settings.warningThreshold) || 3
+          }
+        };
+      } catch (error) {
+        return {
+          kids: [],
+          courses: [],
+          records: [],
+          settings: { warningThreshold: 3 }
+        };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function uid(prefix) {
+      return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function findKid(id) {
+      return state.kids.find((kid) => kid.id === id);
+    }
+
+    function findCourse(id) {
+      return state.courses.find((course) => course.id === id);
+    }
+
+    function getCourseRecords(courseId) {
+      return state.records.filter((record) => record.courseId === courseId);
+    }
+
+    function getCourseRemaining(courseId) {
+      const course = findCourse(courseId);
+      if (!course) return 0;
+      const totalChange = getCourseRecords(courseId).reduce((sum, record) => {
+        return sum + (record.type === "recharge" ? record.hours : -record.hours);
+      }, 0);
+      return roundHalf(course.totalHours + totalChange);
+    }
+
+    function roundHalf(value) {
+      return Math.round(value * 2) / 2;
+    }
+
+    function formatHours(value) {
+      return Number(value).toFixed(value % 1 === 0 ? 0 : 1);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function renderTabs() {
+      const container = document.getElementById("tabs");
+      container.innerHTML = tabs.map((tab, index) => {
+        return '<button class="tab' + (index === 0 ? ' active' : '') + '" data-tab-btn="' + tab.key + '">' + tab.label + '</button>';
+      }).join("");
+
+      container.querySelectorAll("[data-tab-btn]").forEach((button) => {
+        button.addEventListener("click", () => switchTab(button.dataset.tabBtn));
+      });
+    }
+
+    function switchTab(tabKey) {
+      document.querySelectorAll(".tab").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tabBtn === tabKey);
+      });
+      document.querySelectorAll(".panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.tab === tabKey);
+      });
+    }
+
+    function renderStats() {
+      const courseRemain = state.courses.reduce((sum, course) => sum + getCourseRemaining(course.id), 0);
+      const warnings = state.courses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold).length;
+      const items = [
+        { label: "孩子", value: state.kids.length },
+        { label: "课程", value: state.courses.length },
+        { label: "剩余总课时", value: formatHours(courseRemain) },
+        { label: "预警课程", value: warnings }
+      ];
+      document.getElementById("stats").innerHTML = items.map((item) => {
+        return '<div class="stat"><div class="label">' + item.label + '</div><div class="value">' + item.value + '</div></div>';
+      }).join("");
+    }
+
+    function renderKidOptions() {
+      const kidOptions = state.kids.map((kid) => '<option value="' + kid.id + '">' + escapeHtml(kid.name) + '</option>').join("");
+      ["course-kid", "record-kid"].forEach((id) => {
+        const select = document.getElementById(id);
+        select.innerHTML = kidOptions || '<option value="">请先添加孩子</option>';
+      });
+      renderRecordCourseOptions();
+    }
+
+    function renderRecordCourseOptions() {
+      const kidId = document.getElementById("record-kid").value;
+      const courses = state.courses.filter((course) => course.kidId === kidId);
+      const select = document.getElementById("record-course");
+      select.innerHTML = courses.map((course) => {
+        const remain = formatHours(getCourseRemaining(course.id));
+        return '<option value="' + course.id + '">' + escapeHtml(course.name) + '（剩余 ' + remain + '）</option>';
+      }).join("") || '<option value="">请先添加课程</option>';
+      renderRecordTip();
+    }
+
+    function renderRecordTip() {
+      const courseId = document.getElementById("record-course").value;
+      const course = findCourse(courseId);
+      const tip = document.getElementById("record-tip");
+      if (!course) {
+        tip.textContent = "先添加孩子和课程。";
+        return;
+      }
+      const remain = getCourseRemaining(courseId);
+      tip.textContent = "当前课程剩余 " + formatHours(remain) + " 课时。";
+    }
+
+    function renderKids() {
+      const container = document.getElementById("kid-list");
+      if (!state.kids.length) {
+        container.innerHTML = '<div class="empty">还没有孩子信息</div>';
+        return;
+      }
+      container.innerHTML = state.kids.map((kid) => {
+        const kidCourses = state.courses.filter((course) => course.kidId === kid.id);
+        const remain = kidCourses.reduce((sum, course) => sum + getCourseRemaining(course.id), 0);
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(kid.name) + '</h3><div class="item-sub">' + escapeHtml(kid.gender) + ' | ' + kid.age + ' 岁</div></div><button class="danger" data-delete-kid="' + kid.id + '">删除</button></div><div class="muted">课程 ' + kidCourses.length + ' 门，剩余 ' + formatHours(remain) + ' 课时</div></div>';
+      }).join("");
+
+      container.querySelectorAll("[data-delete-kid]").forEach((button) => {
+        button.addEventListener("click", () => deleteKid(button.dataset.deleteKid));
+      });
+    }
+
+    function renderCourses() {
+      const container = document.getElementById("course-list");
+      const overview = document.getElementById("course-overview");
+      const warningList = document.getElementById("warning-list");
+      document.getElementById("warning-pill").textContent = "阈值 " + state.settings.warningThreshold + " 课时";
+
+      if (!state.courses.length) {
+        container.innerHTML = '<div class="empty">还没有课程信息</div>';
+        overview.innerHTML = '<div class="empty">请先添加课程</div>';
+        warningList.innerHTML = '<div class="empty">暂无预警</div>';
+        return;
+      }
+
+      const courseHtml = state.courses.map((course) => {
+        const kid = findKid(course.kidId);
+        const remain = getCourseRemaining(course.id);
+        const used = roundHalf(course.totalHours - remain);
+        const progress = Math.max(0, Math.min(100, remain / course.totalHours * 100));
+        const tone = remain <= state.settings.warningThreshold ? ' pill danger' : remain <= state.settings.warningThreshold + 2 ? ' pill warn' : ' pill';
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(course.name) + '</h3><div class="item-sub">' + escapeHtml(kid ? kid.name : "未关联孩子") + ' | ' + escapeHtml(course.type) + '</div></div><div class="button-row"><button class="secondary" data-edit-course="' + course.id + '">编辑</button><button class="danger" data-delete-course="' + course.id + '">删除</button></div></div><div class="progress"><span style="width:' + progress + '%"></span></div><div class="button-row"><span class="' + tone + '">剩余 ' + formatHours(remain) + '</span><span class="pill">总课时 ' + formatHours(course.totalHours) + '</span><span class="pill">已消耗 ' + formatHours(used < 0 ? 0 : used) + '</span></div><div class="item-sub">' + escapeHtml(course.note || "无备注") + (course.price ? ' | 单价 ' + Number(course.price).toFixed(0) + ' 元' : '') + '</div></div>';
+      }).join("");
+
+      container.innerHTML = courseHtml;
+      overview.innerHTML = courseHtml;
+
+      const warnings = state.courses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold);
+      warningList.innerHTML = warnings.length ? warnings.map((course) => {
+        const kid = findKid(course.kidId);
+        return '<div class="item"><div class="item-title">' + escapeHtml(course.name) + '</div><div class="item-sub">' + escapeHtml(kid ? kid.name : "") + '，剩余 ' + formatHours(getCourseRemaining(course.id)) + ' 课时</div></div>';
+      }).join("") : '<div class="empty">暂无预警</div>';
+
+      document.querySelectorAll("[data-edit-course]").forEach((button) => {
+        button.addEventListener("click", () => startEditCourse(button.dataset.editCourse));
+      });
+
+      document.querySelectorAll("[data-delete-course]").forEach((button) => {
+        button.addEventListener("click", () => deleteCourse(button.dataset.deleteCourse));
+      });
+    }
+
+    function renderHistory() {
+      const container = document.getElementById("history-list");
+      const records = [...state.records].sort((a, b) => (a.date < b.date ? 1 : -1) || (a.createdAt < b.createdAt ? 1 : -1));
+      document.getElementById("history-count").textContent = records.length + " 条";
+      if (!records.length) {
+        container.innerHTML = '<div class="empty">还没有记录</div>';
+        return;
+      }
+      container.innerHTML = records.map((record) => {
+        const course = findCourse(record.courseId);
+        const kid = findKid(record.kidId);
+        const sign = record.type === "recharge" ? "+" : "-";
+        const pillClass = record.type === "recharge" ? "pill" : "pill danger";
+        const label = record.type === "recharge" ? "充值" : "消耗";
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(kid ? kid.name : "") + ' · ' + escapeHtml(course ? course.name : "") + '</h3><div class="item-sub">' + record.date + ' | ' + escapeHtml(record.note || label) + '</div></div><div class="button-row"><span class="' + pillClass + '">' + sign + formatHours(record.hours) + '</span><button class="danger" data-delete-record="' + record.id + '">删除</button></div></div><div class="item-sub">' + label + '记录</div></div>';
+      }).join("");
+
+      container.querySelectorAll("[data-delete-record]").forEach((button) => {
+        button.addEventListener("click", () => deleteRecord(button.dataset.deleteRecord));
+      });
+    }
+
+    function deleteKid(kidId) {
+      const kid = findKid(kidId);
+      if (!kid || !confirm('删除“' + kid.name + '”以及相关课程和记录？')) return;
+      const courseIds = state.courses.filter((course) => course.kidId === kidId).map((course) => course.id);
+      state.kids = state.kids.filter((kidItem) => kidItem.id !== kidId);
+      state.courses = state.courses.filter((course) => course.kidId !== kidId);
+      state.records = state.records.filter((record) => record.kidId !== kidId && !courseIds.includes(record.courseId));
+      persistAndRender('已删除孩子');
+    }
+
+    function deleteCourse(courseId) {
+      const course = findCourse(courseId);
+      if (!course || !confirm('删除课程“' + course.name + '”以及其记录？')) return;
+      state.courses = state.courses.filter((item) => item.id !== courseId);
+      state.records = state.records.filter((record) => record.courseId !== courseId);
+      persistAndRender('已删除课程');
+    }
+
+    function deleteRecord(recordId) {
+      const record = state.records.find((item) => item.id === recordId);
+      if (!record) return;
+      if (!confirm("删除这条课时记录？")) return;
+      state.records = state.records.filter((item) => item.id !== recordId);
+      persistAndRender("已删除记录");
+    }
+
+    function persistAndRender(message) {
+      saveState();
+      renderAll();
+      if (message) showToast(message);
+    }
+
+    function resetCourseForm() {
+      editingCourseId = null;
+      document.getElementById("course-form").reset();
+      document.getElementById("course-type").value = "艺术类";
+      document.getElementById("course-total").value = 24;
+      document.getElementById("course-submit").textContent = "保存课程";
+      document.getElementById("course-cancel").classList.add("hidden");
+      document.getElementById("course-form-tip").textContent = "";
+    }
+
+    function startEditCourse(courseId) {
+      const course = findCourse(courseId);
+      if (!course) return;
+      editingCourseId = courseId;
+      document.getElementById("course-kid").value = course.kidId;
+      document.getElementById("course-name").value = course.name;
+      document.getElementById("course-type").value = course.type;
+      document.getElementById("course-total").value = course.totalHours;
+      document.getElementById("course-price").value = course.price == null ? "" : course.price;
+      document.getElementById("course-note").value = course.note || "";
+      document.getElementById("course-submit").textContent = "保存修改";
+      document.getElementById("course-cancel").classList.remove("hidden");
+      document.getElementById("course-form-tip").textContent = "正在编辑课程：" + course.name;
+      switchTab("courses");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderAll() {
+      renderStats();
+      renderKidOptions();
+      renderKids();
+      renderCourses();
+      renderHistory();
+      document.getElementById("warning-threshold").value = state.settings.warningThreshold;
+    }
+
+    function escapeHtml(text) {
+      return String(text == null ? "" : text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setupForms() {
+      document.getElementById("record-date").value = new Date().toISOString().slice(0, 10);
+
+      document.getElementById("kid-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.getElementById("kid-name").value.trim();
+        const age = Number(document.getElementById("kid-age").value);
+        const gender = document.getElementById("kid-gender").value;
+        if (!name) return showToast("请输入孩子姓名");
+        state.kids.push({ id: uid("kid"), name, age, gender, createdAt: new Date().toISOString() });
+        event.target.reset();
+        document.getElementById("kid-age").value = 6;
+        document.getElementById("kid-gender").value = "男";
+        persistAndRender("已保存孩子");
+      });
+
+      document.getElementById("course-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!state.kids.length) return showToast("请先添加孩子");
+        const kidId = document.getElementById("course-kid").value;
+        const name = document.getElementById("course-name").value.trim();
+        const type = document.getElementById("course-type").value;
+        const totalHours = roundHalf(Number(document.getElementById("course-total").value));
+        const priceInput = document.getElementById("course-price").value;
+        const note = document.getElementById("course-note").value.trim();
+        if (!kidId || !name || totalHours <= 0) return showToast("请完整填写课程信息");
+        if (editingCourseId) {
+          const course = findCourse(editingCourseId);
+          if (!course) return showToast("课程不存在");
+          const changeHours = getCourseRecords(editingCourseId).reduce((sum, record) => {
+            return sum + (record.type === "recharge" ? record.hours : -record.hours);
+          }, 0);
+          if (totalHours + changeHours < 0) {
+            return showToast("修改后总课时不能小于已消耗课时");
+          }
+          const previousKidId = course.kidId;
+          course.kidId = kidId;
+          course.name = name;
+          course.type = type;
+          course.totalHours = totalHours;
+          course.price = priceInput ? Number(priceInput) : null;
+          course.note = note;
+          if (previousKidId !== kidId) {
+            state.records.forEach((record) => {
+              if (record.courseId === editingCourseId) {
+                record.kidId = kidId;
+              }
+            });
+          }
+          resetCourseForm();
+          persistAndRender("已更新课程");
+          return;
+        }
+        state.courses.push({
+          id: uid("course"),
+          kidId,
+          name,
+          type,
+          totalHours,
+          price: priceInput ? Number(priceInput) : null,
+          note,
+          createdAt: new Date().toISOString()
+        });
+        resetCourseForm();
+        persistAndRender("已保存课程");
+      });
+
+      document.getElementById("course-cancel").addEventListener("click", () => {
+        resetCourseForm();
+      });
+
+      document.getElementById("record-kid").addEventListener("change", renderRecordCourseOptions);
+      document.getElementById("record-course").addEventListener("change", renderRecordTip);
+
+      document.getElementById("record-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitRecord();
+      });
+
+      document.getElementById("mode-consume").addEventListener("click", () => setRecordMode("consume"));
+      document.getElementById("mode-recharge").addEventListener("click", () => setRecordMode("recharge"));
+
+      document.querySelectorAll("[data-quick]").forEach((button) => {
+        button.addEventListener("click", () => submitRecord(Number(button.dataset.quick), "consume", "快捷记录"));
+      });
+
+      document.getElementById("save-settings").addEventListener("click", () => {
+        const value = Number(document.getElementById("warning-threshold").value);
+        state.settings.warningThreshold = value > 0 ? value : 3;
+        persistAndRender("设置已保存");
+      });
+
+      document.getElementById("export-btn").addEventListener("click", exportData);
+      document.getElementById("import-btn").addEventListener("click", () => document.getElementById("import-file").click());
+      document.getElementById("import-file").addEventListener("change", importData);
+    }
+
+    function setRecordMode(mode) {
+      recordMode = mode;
+      document.getElementById("hours-label").textContent = mode === "consume" ? "消耗课时" : "充值课时";
+      document.getElementById("record-submit").textContent = mode === "consume" ? "确认消耗" : "确认充值";
+      document.getElementById("mode-consume").classList.toggle("active", mode === "consume");
+      document.getElementById("mode-recharge").classList.toggle("active", mode === "recharge");
+      renderRecordTip();
+    }
+
+    function submitRecord(quickHours, forceMode, quickNote) {
+      const kidId = document.getElementById("record-kid").value;
+      const courseId = document.getElementById("record-course").value;
+      const hours = roundHalf(Number(quickHours || document.getElementById("record-hours").value));
+      const date = document.getElementById("record-date").value;
+      const note = quickNote || document.getElementById("record-note").value.trim();
+      const mode = forceMode || recordMode;
+      const course = findCourse(courseId);
+      if (!kidId || !courseId || !course || hours <= 0 || !date) {
+        return showToast("请完整填写记录信息");
+      }
+      const remaining = getCourseRemaining(courseId);
+      if (mode === "consume" && hours > remaining) {
+        return showToast("消耗课时不能超过剩余课时");
+      }
+      state.records.push({
+        id: uid("record"),
+        kidId,
+        courseId,
+        type: mode,
+        hours,
+        date,
+        note,
+        createdAt: new Date().toISOString()
+      });
+      document.getElementById("record-note").value = "";
+      persistAndRender(mode === "consume" ? "已记录消耗" : "已记录充值");
+    }
+
+    function exportData() {
+      const payload = JSON.stringify(state, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "课时数据备份.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("已导出备份");
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!Array.isArray(parsed.kids) || !Array.isArray(parsed.courses) || !Array.isArray(parsed.records)) {
+            throw new Error("invalid");
+          }
+          state = {
+            kids: parsed.kids,
+            courses: parsed.courses,
+            records: parsed.records,
+            settings: {
+              warningThreshold: Number(parsed.settings && parsed.settings.warningThreshold) || 3
+            }
+          };
+          persistAndRender("已导入数据");
+        } catch (error) {
+          showToast("导入失败，文件格式不对");
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    renderTabs();
+    setupForms();
+    setRecordMode("consume");
+    resetCourseForm();
+    renderAll();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
