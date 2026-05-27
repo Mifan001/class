@@ -57,6 +57,7 @@
     .hero h1 {
       margin: 0 0 8px;
       font-size: 26px;
+      text-align: center;
     }
 
     .hero p {
@@ -101,11 +102,14 @@
     }
 
     .card {
-      background: var(--card);
+      background: rgba(248, 250, 252, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-radius: 18px;
       padding: 16px;
       margin-bottom: 14px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.55);
     }
 
     .section-title {
@@ -167,6 +171,23 @@
       outline: none;
     }
 
+    .overview-filter-select {
+      width: auto;
+      min-width: 148px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      color: #3730a3;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.12);
+    }
+
+    .overview-filter-select:focus {
+      box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.22);
+    }
+
     textarea {
       min-height: 90px;
       resize: vertical;
@@ -199,6 +220,31 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    .compact-filters {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .compact-filters .section-title {
+      margin: 0;
+      white-space: nowrap;
+      font-size: 16px;
+    }
+
+    .compact-filters select {
+      min-width: 0;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    .compact-filters .pill {
+      justify-self: end;
+      white-space: nowrap;
     }
 
     .pill {
@@ -306,26 +352,26 @@
       .stats {
         grid-template-columns: 1fr;
       }
+
+      .compact-filters {
+        grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+      }
     }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="hero">
-      <h1>小孩兴趣班课时管理</h1>
-      <p>手机浏览器直接使用，数据保存在本机，不需要电脑。</p>
+      <h1>兴趣班课时管理</h1>
     </div>
 
     <div class="tabs" id="tabs"></div>
 
     <section class="panel active" data-tab="overview">
       <div class="card">
-        <h2 class="section-title">总览</h2>
-        <div class="stats" id="stats"></div>
-      </div>
-      <div class="card">
-        <h2 class="section-title">安装到手机桌面</h2>
-        <div class="muted">发布到 GitHub Pages 后，用手机浏览器打开网址，再选择“添加到主屏幕”即可像 App 一样使用。</div>
+        <div class="button-row" style="justify-content: flex-end;">
+          <select id="overview-filter" class="overview-filter-select"></select>
+        </div>
       </div>
       <div class="card">
         <div class="item-header">
@@ -335,12 +381,17 @@
         <div id="warning-list"></div>
       </div>
       <div class="card">
+        <h2 class="section-title">花费统计</h2>
+        <div class="stats" id="monthly-stats" style="margin-bottom: 12px;"></div>
+        <div id="monthly-cost-list"></div>
+      </div>
+      <div class="card">
         <h2 class="section-title">课程情况</h2>
         <div id="course-overview"></div>
       </div>
     </section>
 
-    <section class="panel" data-tab="kids">
+    <section class="panel" data-tab="courses">
       <div class="card">
         <h2 class="section-title">添加孩子</h2>
         <form id="kid-form" class="grid two">
@@ -360,17 +411,12 @@
             </select>
           </div>
           <div class="button-row" style="align-items:end;">
-            <button type="submit">保存孩子</button>
+            <button type="submit" id="kid-submit">保存孩子</button>
+            <button type="button" class="secondary hidden" id="kid-cancel">取消编辑</button>
           </div>
         </form>
+        <p class="muted" id="kid-form-tip"></p>
       </div>
-      <div class="card">
-        <h2 class="section-title">孩子列表</h2>
-        <div id="kid-list"></div>
-      </div>
-    </section>
-
-    <section class="panel" data-tab="courses">
       <div class="card">
         <h2 class="section-title">添加课程</h2>
         <form id="course-form" class="grid two">
@@ -412,8 +458,8 @@
         <p class="muted" id="course-form-tip"></p>
       </div>
       <div class="card">
-        <h2 class="section-title">课程列表</h2>
-        <div id="course-list"></div>
+        <h2 class="section-title">孩子列表</h2>
+        <div id="kid-list"></div>
       </div>
     </section>
 
@@ -466,8 +512,10 @@
 
     <section class="panel" data-tab="history">
       <div class="card">
-        <div class="item-header">
+        <div class="compact-filters" style="margin-bottom: 12px;">
           <h2 class="section-title">历史记录</h2>
+          <select id="history-filter"></select>
+          <select id="history-month-filter"></select>
           <span class="pill" id="history-count">0 条</span>
         </div>
         <div id="history-list"></div>
@@ -477,6 +525,19 @@
         <div class="button-row" style="margin-bottom: 10px;">
           <button type="button" id="export-btn">导出数据</button>
           <button type="button" class="secondary" id="import-btn">导入数据</button>
+        </div>
+        <div class="grid two" style="margin-bottom: 10px;">
+          <div>
+            <label for="report-kid">导出孩子月报</label>
+            <select id="report-kid"></select>
+          </div>
+          <div>
+            <label for="report-month">月份</label>
+            <select id="report-month"></select>
+          </div>
+        </div>
+        <div class="button-row" style="margin-bottom: 10px;">
+          <button type="button" class="warn" id="export-report-btn">导出月度费用报表</button>
         </div>
         <input id="import-file" class="hidden" type="file" accept="application/json">
         <div class="grid two">
@@ -498,14 +559,21 @@
     const STORAGE_KEY = "class-hours-mobile-v1";
     const tabs = [
       { key: "overview", label: "总览" },
-      { key: "kids", label: "孩子" },
-      { key: "courses", label: "课程" },
-      { key: "record", label: "记录" },
+      { key: "courses", label: "课程管理" },
+      { key: "record", label: "消耗登记" },
       { key: "history", label: "备份" }
     ];
 
     let recordMode = "consume";
+    let editingKidId = null;
     let editingCourseId = null;
+    let filters = {
+      overviewKidId: "all",
+      historyKidId: "all",
+      historyMonth: "all",
+      reportKidId: "",
+      reportMonth: ""
+    };
     let state = loadState();
 
     function loadState() {
@@ -603,16 +671,73 @@
       });
     }
 
+    function getFilteredCourses(kidId) {
+      return kidId === "all"
+        ? state.courses
+        : state.courses.filter((course) => course.kidId === kidId);
+    }
+
+    function getFilteredRecords(kidId) {
+      return kidId === "all"
+        ? state.records
+        : state.records.filter((record) => record.kidId === kidId);
+    }
+
+    function getAvailableMonths(records) {
+      return [...new Set(
+        records
+          .filter((record) => typeof record.date === "string" && record.date.length >= 7)
+          .map((record) => record.date.slice(0, 7))
+      )].sort((a, b) => a < b ? 1 : -1);
+    }
+
+    function renderFilterOptions() {
+      const options = ['<option value="all">全部孩子</option>']
+        .concat(state.kids.map((kid) => '<option value="' + kid.id + '">' + escapeHtml(kid.name) + '</option>'))
+        .join("");
+      const overviewFilter = document.getElementById("overview-filter");
+      const historyFilter = document.getElementById("history-filter");
+      const historyMonthFilter = document.getElementById("history-month-filter");
+      const reportKid = document.getElementById("report-kid");
+      const reportMonth = document.getElementById("report-month");
+      overviewFilter.innerHTML = options;
+      historyFilter.innerHTML = options;
+      reportKid.innerHTML = '<option value="">请选择孩子</option>' + state.kids.map((kid) => '<option value="' + kid.id + '">' + escapeHtml(kid.name) + '</option>').join("");
+      overviewFilter.value = state.kids.some((kid) => kid.id === filters.overviewKidId) || filters.overviewKidId === "all" ? filters.overviewKidId : "all";
+      historyFilter.value = state.kids.some((kid) => kid.id === filters.historyKidId) || filters.historyKidId === "all" ? filters.historyKidId : "all";
+      reportKid.value = state.kids.some((kid) => kid.id === filters.reportKidId) ? filters.reportKidId : "";
+
+      const historyMonths = getAvailableMonths(getFilteredRecords(historyFilter.value));
+      historyMonthFilter.innerHTML = '<option value="all">全部月份</option>' + historyMonths.map((month) => '<option value="' + month + '">' + month + '</option>').join("");
+      historyMonthFilter.value = historyMonths.includes(filters.historyMonth) ? filters.historyMonth : "all";
+
+      const reportMonths = getAvailableMonths(getFilteredRecords(reportKid.value || "all").filter((record) => record.type === "consume"));
+      reportMonth.innerHTML = '<option value="">请选择月份</option>' + reportMonths.map((month) => '<option value="' + month + '">' + month + '</option>').join("");
+      reportMonth.value = reportMonths.includes(filters.reportMonth) ? filters.reportMonth : "";
+
+      filters.overviewKidId = overviewFilter.value;
+      filters.historyKidId = historyFilter.value;
+      filters.historyMonth = historyMonthFilter.value;
+      filters.reportKidId = reportKid.value;
+      filters.reportMonth = reportMonth.value;
+    }
+
     function renderStats() {
-      const courseRemain = state.courses.reduce((sum, course) => sum + getCourseRemaining(course.id), 0);
-      const warnings = state.courses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold).length;
+      const stats = document.getElementById("stats");
+      if (!stats) {
+        return;
+      }
+      const filteredCourses = getFilteredCourses(filters.overviewKidId);
+      const filteredKidIds = new Set(filteredCourses.map((course) => course.kidId));
+      const courseRemain = filteredCourses.reduce((sum, course) => sum + getCourseRemaining(course.id), 0);
+      const warnings = filteredCourses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold).length;
       const items = [
-        { label: "孩子", value: state.kids.length },
-        { label: "课程", value: state.courses.length },
+        { label: "孩子", value: filters.overviewKidId === "all" ? state.kids.length : filteredKidIds.size },
+        { label: "课程", value: filteredCourses.length },
         { label: "剩余总课时", value: formatHours(courseRemain) },
         { label: "预警课程", value: warnings }
       ];
-      document.getElementById("stats").innerHTML = items.map((item) => {
+      stats.innerHTML = items.map((item) => {
         return '<div class="stat"><div class="label">' + item.label + '</div><div class="value">' + item.value + '</div></div>';
       }).join("");
     }
@@ -658,40 +783,56 @@
       container.innerHTML = state.kids.map((kid) => {
         const kidCourses = state.courses.filter((course) => course.kidId === kid.id);
         const remain = kidCourses.reduce((sum, course) => sum + getCourseRemaining(course.id), 0);
-        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(kid.name) + '</h3><div class="item-sub">' + escapeHtml(kid.gender) + ' | ' + kid.age + ' 岁</div></div><button class="danger" data-delete-kid="' + kid.id + '">删除</button></div><div class="muted">课程 ' + kidCourses.length + ' 门，剩余 ' + formatHours(remain) + ' 课时</div></div>';
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(kid.name) + '</h3><div class="item-sub">' + escapeHtml(kid.gender) + ' | ' + kid.age + ' 岁</div></div><div class="button-row"><button class="secondary" data-edit-kid="' + kid.id + '">编辑</button><button class="danger" data-delete-kid="' + kid.id + '">删除</button></div></div><div class="muted">课程 ' + kidCourses.length + ' 门，剩余 ' + formatHours(remain) + ' 课时</div></div>';
       }).join("");
 
+      container.querySelectorAll("[data-edit-kid]").forEach((button) => {
+        button.addEventListener("click", () => startEditKid(button.dataset.editKid));
+      });
       container.querySelectorAll("[data-delete-kid]").forEach((button) => {
         button.addEventListener("click", () => deleteKid(button.dataset.deleteKid));
       });
     }
 
     function renderCourses() {
-      const container = document.getElementById("course-list");
       const overview = document.getElementById("course-overview");
       const warningList = document.getElementById("warning-list");
+      const monthlyStats = document.getElementById("monthly-stats");
+      const monthlyCostList = document.getElementById("monthly-cost-list");
+      const filteredOverviewCourses = getFilteredCourses(filters.overviewKidId);
+      const monthKey = new Date().toISOString().slice(0, 7);
+      const overviewRecords = getFilteredRecords(filters.overviewKidId).filter((record) => record.type === "consume");
+      const currentMonthCost = overviewRecords
+        .filter((record) => record.date.slice(0, 7) === monthKey)
+        .reduce((sum, record) => sum + getRecordCost(record), 0);
+      const monthlyCosts = overviewRecords.reduce((map, record) => {
+        const key = record.date.slice(0, 7);
+        map[key] = (map[key] || 0) + getRecordCost(record);
+        return map;
+      }, {});
+      const monthlyEntries = Object.entries(monthlyCosts).sort((a, b) => a[0] < b[0] ? 1 : -1);
+
       document.getElementById("warning-pill").textContent = "阈值 " + state.settings.warningThreshold + " 课时";
+      monthlyStats.innerHTML = '<div class="stat"><div class="label">本月花费</div><div class="value">' + formatCurrency(currentMonthCost) + '</div></div><div class="stat"><div class="label">累计花费</div><div class="value">' + formatCurrency(monthlyEntries.reduce((sum, entry) => sum + entry[1], 0)) + '</div></div>';
+      monthlyCostList.innerHTML = monthlyEntries.length ? monthlyEntries.map((entry) => {
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + entry[0] + '</h3><div class="item-sub">' + (filters.overviewKidId === "all" ? '当前筛选下的花费汇总' : '当前孩子花费汇总') + '</div></div><span class="pill">' + formatCurrency(entry[1]) + '</span></div></div>';
+      }).join("") : '<div class="empty">当前筛选下还没有花费统计</div>';
 
       if (!state.courses.length) {
-        container.innerHTML = '<div class="empty">还没有课程信息</div>';
         overview.innerHTML = '<div class="empty">请先添加课程</div>';
         warningList.innerHTML = '<div class="empty">暂无预警</div>';
         return;
       }
-
-      const courseHtml = state.courses.map((course) => {
+      overview.innerHTML = filteredOverviewCourses.length ? filteredOverviewCourses.map((course) => {
         const kid = findKid(course.kidId);
         const remain = getCourseRemaining(course.id);
         const used = roundHalf(course.totalHours - remain);
         const progress = Math.max(0, Math.min(100, remain / course.totalHours * 100));
         const tone = remain <= state.settings.warningThreshold ? ' pill danger' : remain <= state.settings.warningThreshold + 2 ? ' pill warn' : ' pill';
-        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(course.name) + '</h3><div class="item-sub">' + escapeHtml(kid ? kid.name : "未关联孩子") + ' | ' + escapeHtml(course.type) + '</div></div><div class="button-row"><button class="secondary" data-edit-course="' + course.id + '">编辑</button><button class="danger" data-delete-course="' + course.id + '">删除</button></div></div><div class="progress"><span style="width:' + progress + '%"></span></div><div class="button-row"><span class="' + tone + '">剩余 ' + formatHours(remain) + '</span><span class="pill">总课时 ' + formatHours(course.totalHours) + '</span><span class="pill">已消耗 ' + formatHours(used < 0 ? 0 : used) + '</span></div><div class="item-sub">' + escapeHtml(course.note || "无备注") + (course.price ? ' | 单价 ' + Number(course.price).toFixed(0) + ' 元' : '') + '</div></div>';
-      }).join("");
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(course.name) + '</h3><div class="item-sub">' + escapeHtml(kid ? kid.name : "未关联孩子") + ' | ' + escapeHtml(course.type) + '</div></div></div><div class="progress"><span style="width:' + progress + '%"></span></div><div class="button-row"><span class="' + tone + '">剩余 ' + formatHours(remain) + '</span><span class="pill">总课时 ' + formatHours(course.totalHours) + '</span><span class="pill">已消耗 ' + formatHours(used < 0 ? 0 : used) + '</span></div><div class="item-sub">' + escapeHtml(course.note || "无备注") + (course.price ? ' | 单价 ' + Number(course.price).toFixed(0) + ' 元' : '') + '</div></div>';
+      }).join("") : '<div class="empty">当前筛选下没有课程</div>';
 
-      container.innerHTML = courseHtml;
-      overview.innerHTML = courseHtml;
-
-      const warnings = state.courses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold);
+      const warnings = filteredOverviewCourses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold);
       warningList.innerHTML = warnings.length ? warnings.map((course) => {
         const kid = findKid(course.kidId);
         return '<div class="item"><div class="item-title">' + escapeHtml(course.name) + '</div><div class="item-sub">' + escapeHtml(kid ? kid.name : "") + '，剩余 ' + formatHours(getCourseRemaining(course.id)) + ' 课时</div></div>';
@@ -708,8 +849,23 @@
 
     function renderHistory() {
       const container = document.getElementById("history-list");
-      const records = [...state.records].sort((a, b) => (a.date < b.date ? 1 : -1) || (a.createdAt < b.createdAt ? 1 : -1));
+      const records = [...getFilteredRecords(filters.historyKidId)]
+        .filter((record) => filters.historyMonth === "all" || record.date.slice(0, 7) === filters.historyMonth)
+        .sort((a, b) => (a.date < b.date ? 1 : -1) || (a.createdAt < b.createdAt ? 1 : -1));
+      const consumeRecords = records.filter((record) => record.type === "consume");
+      const monthKey = new Date().toISOString().slice(0, 7);
+      const currentMonthCost = consumeRecords
+        .filter((record) => record.date.slice(0, 7) === monthKey)
+        .reduce((sum, record) => sum + getRecordCost(record), 0);
+      const monthlyCosts = consumeRecords.reduce((map, record) => {
+        const key = record.date.slice(0, 7);
+        map[key] = (map[key] || 0) + getRecordCost(record);
+        return map;
+      }, {});
+      const monthlyEntries = Object.entries(monthlyCosts).sort((a, b) => a[0] < b[0] ? 1 : -1);
+
       document.getElementById("history-count").textContent = records.length + " 条";
+
       if (!records.length) {
         container.innerHTML = '<div class="empty">还没有记录</div>';
         return;
@@ -720,7 +876,8 @@
         const sign = record.type === "recharge" ? "+" : "-";
         const pillClass = record.type === "recharge" ? "pill" : "pill danger";
         const label = record.type === "recharge" ? "充值" : "消耗";
-        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(kid ? kid.name : "") + ' · ' + escapeHtml(course ? course.name : "") + '</h3><div class="item-sub">' + record.date + ' | ' + escapeHtml(record.note || label) + '</div></div><div class="button-row"><span class="' + pillClass + '">' + sign + formatHours(record.hours) + '</span><button class="danger" data-delete-record="' + record.id + '">删除</button></div></div><div class="item-sub">' + label + '记录</div></div>';
+        const costText = record.type === "consume" ? ' | 费用 ' + formatCurrency(getRecordCost(record)) : '';
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(kid ? kid.name : "") + ' · ' + escapeHtml(course ? course.name : "") + '</h3><div class="item-sub">' + record.date + ' | ' + escapeHtml(record.note || label) + costText + '</div></div><div class="button-row"><span class="' + pillClass + '">' + sign + formatHours(record.hours) + '</span><button class="danger" data-delete-record="' + record.id + '">删除</button></div></div><div class="item-sub">' + label + '记录</div></div>';
       }).join("");
 
       container.querySelectorAll("[data-delete-record]").forEach((button) => {
@@ -760,6 +917,43 @@
       if (message) showToast(message);
     }
 
+    function getRecordCost(record) {
+      if (record.type !== "consume") return 0;
+      if (typeof record.totalCost === "number") return record.totalCost;
+      const unitPrice = typeof record.unitPrice === "number"
+        ? record.unitPrice
+        : Number((findCourse(record.courseId) || {}).price || 0);
+      return Number((record.hours * unitPrice).toFixed(2));
+    }
+
+    function formatCurrency(value) {
+      return "¥" + Number(value || 0).toFixed(2);
+    }
+
+    function resetKidForm() {
+      editingKidId = null;
+      document.getElementById("kid-form").reset();
+      document.getElementById("kid-age").value = 6;
+      document.getElementById("kid-gender").value = "男";
+      document.getElementById("kid-submit").textContent = "保存孩子";
+      document.getElementById("kid-cancel").classList.add("hidden");
+      document.getElementById("kid-form-tip").textContent = "";
+    }
+
+    function startEditKid(kidId) {
+      const kid = findKid(kidId);
+      if (!kid) return;
+      editingKidId = kidId;
+      document.getElementById("kid-name").value = kid.name;
+      document.getElementById("kid-age").value = kid.age;
+      document.getElementById("kid-gender").value = kid.gender;
+      document.getElementById("kid-submit").textContent = "保存修改";
+      document.getElementById("kid-cancel").classList.remove("hidden");
+      document.getElementById("kid-form-tip").textContent = "正在编辑孩子：" + kid.name;
+      switchTab("courses");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function resetCourseForm() {
       editingCourseId = null;
       document.getElementById("course-form").reset();
@@ -788,6 +982,7 @@
     }
 
     function renderAll() {
+      renderFilterOptions();
       renderStats();
       renderKidOptions();
       renderKids();
@@ -814,11 +1009,23 @@
         const age = Number(document.getElementById("kid-age").value);
         const gender = document.getElementById("kid-gender").value;
         if (!name) return showToast("请输入孩子姓名");
+        if (editingKidId) {
+          const kid = findKid(editingKidId);
+          if (!kid) return showToast("孩子不存在");
+          kid.name = name;
+          kid.age = age;
+          kid.gender = gender;
+          resetKidForm();
+          persistAndRender("已更新孩子信息");
+          return;
+        }
         state.kids.push({ id: uid("kid"), name, age, gender, createdAt: new Date().toISOString() });
-        event.target.reset();
-        document.getElementById("kid-age").value = 6;
-        document.getElementById("kid-gender").value = "男";
+        resetKidForm();
         persistAndRender("已保存孩子");
+      });
+
+      document.getElementById("kid-cancel").addEventListener("click", () => {
+        resetKidForm();
       });
 
       document.getElementById("course-form").addEventListener("submit", (event) => {
@@ -878,6 +1085,28 @@
 
       document.getElementById("record-kid").addEventListener("change", renderRecordCourseOptions);
       document.getElementById("record-course").addEventListener("change", renderRecordTip);
+      document.getElementById("overview-filter").addEventListener("change", (event) => {
+        filters.overviewKidId = event.target.value;
+        renderFilterOptions();
+        renderStats();
+        renderCourses();
+      });
+      document.getElementById("history-filter").addEventListener("change", (event) => {
+        filters.historyKidId = event.target.value;
+        renderFilterOptions();
+        renderHistory();
+      });
+      document.getElementById("history-month-filter").addEventListener("change", (event) => {
+        filters.historyMonth = event.target.value;
+        renderHistory();
+      });
+      document.getElementById("report-kid").addEventListener("change", (event) => {
+        filters.reportKidId = event.target.value;
+        renderFilterOptions();
+      });
+      document.getElementById("report-month").addEventListener("change", (event) => {
+        filters.reportMonth = event.target.value;
+      });
 
       document.getElementById("record-form").addEventListener("submit", (event) => {
         event.preventDefault();
@@ -898,6 +1127,7 @@
       });
 
       document.getElementById("export-btn").addEventListener("click", exportData);
+      document.getElementById("export-report-btn").addEventListener("click", exportMonthlyReport);
       document.getElementById("import-btn").addEventListener("click", () => document.getElementById("import-file").click());
       document.getElementById("import-file").addEventListener("change", importData);
     }
@@ -926,12 +1156,15 @@
       if (mode === "consume" && hours > remaining) {
         return showToast("消耗课时不能超过剩余课时");
       }
+      const unitPrice = Number(course.price || 0);
       state.records.push({
         id: uid("record"),
         kidId,
         courseId,
         type: mode,
         hours,
+        unitPrice,
+        totalCost: mode === "consume" ? Number((hours * unitPrice).toFixed(2)) : 0,
         date,
         note,
         createdAt: new Date().toISOString()
@@ -950,6 +1183,49 @@
       a.click();
       URL.revokeObjectURL(url);
       showToast("已导出备份");
+    }
+
+    function escapeCsv(value) {
+      const text = String(value == null ? "" : value).replace(/"/g, '""');
+      return '"' + text + '"';
+    }
+
+    function exportMonthlyReport() {
+      const kid = findKid(filters.reportKidId);
+      if (!kid) return showToast("请先选择孩子");
+      if (!filters.reportMonth) return showToast("请先选择月份");
+
+      const records = state.records
+        .filter((record) => record.type === "consume" && record.kidId === kid.id && record.date.slice(0, 7) === filters.reportMonth)
+        .sort((a, b) => a.date < b.date ? -1 : 1);
+
+      if (!records.length) {
+        return showToast("该月份没有可导出的费用记录");
+      }
+
+      const header = ["日期", "孩子", "课程", "消耗课时", "单价", "费用", "备注"];
+      const lines = [header.join(",")].concat(records.map((record) => {
+        const course = findCourse(record.courseId);
+        return [
+          escapeCsv(record.date),
+          escapeCsv(kid.name),
+          escapeCsv(course ? course.name : ""),
+          escapeCsv(formatHours(record.hours)),
+          escapeCsv(Number(record.unitPrice || 0).toFixed(2)),
+          escapeCsv(getRecordCost(record).toFixed(2)),
+          escapeCsv(record.note || "")
+        ].join(",");
+      }));
+      lines.push([escapeCsv("合计"), "", "", "", "", escapeCsv(records.reduce((sum, record) => sum + getRecordCost(record), 0).toFixed(2)), ""].join(","));
+
+      const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = kid.name + "_" + filters.reportMonth + "_月度费用报表.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("已导出月度费用报表");
     }
 
     function importData(event) {
@@ -983,6 +1259,7 @@
     renderTabs();
     setupForms();
     setRecordMode("consume");
+    resetKidForm();
     resetCourseForm();
     renderAll();
 
