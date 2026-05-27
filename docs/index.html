@@ -829,8 +829,12 @@
         const used = roundHalf(course.totalHours - remain);
         const progress = Math.max(0, Math.min(100, remain / course.totalHours * 100));
         const tone = remain <= state.settings.warningThreshold ? ' pill danger' : remain <= state.settings.warningThreshold + 2 ? ' pill warn' : ' pill';
-        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(course.name) + '</h3><div class="item-sub">' + escapeHtml(kid ? kid.name : "未关联孩子") + ' | ' + escapeHtml(course.type) + '</div></div></div><div class="progress"><span style="width:' + progress + '%"></span></div><div class="button-row"><span class="' + tone + '">剩余 ' + formatHours(remain) + '</span><span class="pill">总课时 ' + formatHours(course.totalHours) + '</span><span class="pill">已消耗 ' + formatHours(used < 0 ? 0 : used) + '</span></div><div class="item-sub">' + escapeHtml(course.note || "无备注") + (course.price ? ' | 单价 ' + Number(course.price).toFixed(0) + ' 元' : '') + '</div></div>';
+        return '<div class="item"><div class="item-header"><div><h3 class="item-title">' + escapeHtml(course.name) + '</h3><div class="item-sub">' + escapeHtml(kid ? kid.name : "未关联孩子") + ' | ' + escapeHtml(course.type) + '</div></div><button class="secondary" data-edit-overview-course="' + course.id + '">编辑</button></div><div class="progress"><span style="width:' + progress + '%"></span></div><div class="button-row"><span class="' + tone + '">剩余 ' + formatHours(remain) + '</span><span class="pill">总课时 ' + formatHours(course.totalHours) + '</span><span class="pill">已消耗 ' + formatHours(used < 0 ? 0 : used) + '</span></div><div class="item-sub">' + escapeHtml(course.note || "无备注") + (course.price ? ' | 单价 ' + Number(course.price).toFixed(0) + ' 元' : '') + '</div></div>';
       }).join("") : '<div class="empty">当前筛选下没有课程</div>';
+
+      overview.querySelectorAll("[data-edit-overview-course]").forEach((button) => {
+        button.addEventListener("click", () => startEditCourse(button.dataset.editOverviewCourse));
+      });
 
       const warnings = filteredOverviewCourses.filter((course) => getCourseRemaining(course.id) <= state.settings.warningThreshold);
       warningList.innerHTML = warnings.length ? warnings.map((course) => {
