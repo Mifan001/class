@@ -224,7 +224,7 @@
 
     .compact-filters {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
       gap: 8px;
       align-items: center;
       width: 100%;
@@ -354,7 +354,7 @@
       }
 
       .compact-filters {
-        grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
       }
     }
   </style>
@@ -515,6 +515,7 @@
         <div class="compact-filters" style="margin-bottom: 12px;">
           <h2 class="section-title">历史记录</h2>
           <select id="history-filter"></select>
+          <select id="history-course-filter"></select>
           <select id="history-month-filter"></select>
           <span class="pill" id="history-count">0 条</span>
         </div>
@@ -570,6 +571,7 @@
     let filters = {
       overviewKidId: "all",
       historyKidId: "all",
+      historyCourseId: "all",
       historyMonth: "all",
       reportKidId: "",
       reportMonth: ""
@@ -697,6 +699,7 @@
         .join("");
       const overviewFilter = document.getElementById("overview-filter");
       const historyFilter = document.getElementById("history-filter");
+      const historyCourseFilter = document.getElementById("history-course-filter");
       const historyMonthFilter = document.getElementById("history-month-filter");
       const reportKid = document.getElementById("report-kid");
       const reportMonth = document.getElementById("report-month");
@@ -706,6 +709,10 @@
       overviewFilter.value = state.kids.some((kid) => kid.id === filters.overviewKidId) || filters.overviewKidId === "all" ? filters.overviewKidId : "all";
       historyFilter.value = state.kids.some((kid) => kid.id === filters.historyKidId) || filters.historyKidId === "all" ? filters.historyKidId : "all";
       reportKid.value = state.kids.some((kid) => kid.id === filters.reportKidId) ? filters.reportKidId : "";
+
+      const historyCourses = getFilteredCourses(historyFilter.value);
+      historyCourseFilter.innerHTML = '<option value="all">全部课程</option>' + historyCourses.map((course) => '<option value="' + course.id + '">' + escapeHtml(course.name) + '</option>').join("");
+      historyCourseFilter.value = historyCourses.some((course) => course.id === filters.historyCourseId) || filters.historyCourseId === "all" ? filters.historyCourseId : "all";
 
       const historyMonths = getAvailableMonths(getFilteredRecords(historyFilter.value));
       historyMonthFilter.innerHTML = '<option value="all">全部月份</option>' + historyMonths.map((month) => '<option value="' + month + '">' + month + '</option>').join("");
@@ -717,6 +724,7 @@
 
       filters.overviewKidId = overviewFilter.value;
       filters.historyKidId = historyFilter.value;
+      filters.historyCourseId = historyCourseFilter.value;
       filters.historyMonth = historyMonthFilter.value;
       filters.reportKidId = reportKid.value;
       filters.reportMonth = reportMonth.value;
@@ -854,6 +862,7 @@
     function renderHistory() {
       const container = document.getElementById("history-list");
       const records = [...getFilteredRecords(filters.historyKidId)]
+        .filter((record) => filters.historyCourseId === "all" || record.courseId === filters.historyCourseId)
         .filter((record) => filters.historyMonth === "all" || record.date.slice(0, 7) === filters.historyMonth)
         .sort((a, b) => (a.date < b.date ? 1 : -1) || (a.createdAt < b.createdAt ? 1 : -1));
       const consumeRecords = records.filter((record) => record.type === "consume");
@@ -1097,7 +1106,12 @@
       });
       document.getElementById("history-filter").addEventListener("change", (event) => {
         filters.historyKidId = event.target.value;
+        filters.historyCourseId = "all";
         renderFilterOptions();
+        renderHistory();
+      });
+      document.getElementById("history-course-filter").addEventListener("change", (event) => {
+        filters.historyCourseId = event.target.value;
         renderHistory();
       });
       document.getElementById("history-month-filter").addEventListener("change", (event) => {
